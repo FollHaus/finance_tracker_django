@@ -2,6 +2,15 @@
 
 ---
 
+### **Интерфейс**  
+<img width="962" height="356" alt="image" src="https://github.com/user-attachments/assets/46c1adc5-f1ef-4c1a-91b6-757a40fe8c05" />
+
+<img width="983" height="770" alt="image" src="https://github.com/user-attachments/assets/b4ee8f2c-61c8-49e9-94e0-06e5c9462dec" />
+
+<img width="894" height="1295" alt="image" src="https://github.com/user-attachments/assets/79c4beda-10d6-4f64-a45a-15d28836fdfc" />
+
+
+---
 #### **1. Разработка веб-приложения для учета финансов**  
 ✅ **Выполнено**  
 
