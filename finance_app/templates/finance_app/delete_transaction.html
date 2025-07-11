@@ -1,0 +1,35 @@
+{% extends 'finance_app/base.html' %}
+{% load static %}
+
+{% block title %}Удалить транзакцию{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4>Удалить транзакцию</h4>
+                </div>
+                <div class="card-body">
+                    <p>Вы уверены, что хотите удалить эту транзакцию?</p>
+                    <div class="alert alert-info">
+                        <strong>Дата:</strong> {{ transaction.date|date:"d.m.Y" }}<br>
+                        <strong>Категория:</strong> {{ transaction.category }}<br>
+                        <strong>Сумма:</strong> {{ transaction.amount }} ₽<br>
+                        <strong>Описание:</strong> {{ transaction.description|default:"-" }}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">Да, удалить</button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

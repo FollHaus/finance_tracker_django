@@ -1,0 +1,9 @@
+{% extends 'finance_app/base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Вы вышли из системы</h2>
+    <p>Спасибо за использование нашего сервиса.</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">Войти снова</a>
+</div>
+{% endblock %}

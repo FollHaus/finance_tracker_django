@@ -1,0 +1,218 @@
+{% extends 'finance_app/base.html' %}
+{% load static %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="my-4">Финансовая сводка</h1>
+
+        <!-- Краткая статистика -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-success h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Общий баланс</h5>
+                        <p class="card-text display-6">{{ balance }} ₽</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Доходы</h5>
+                        <p class="card-text display-6">{{ income }} ₽</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-danger h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Расходы</h5>
+                        <p class="card-text display-6">{{ expenses }} ₽</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Графики доходов и расходов -->
+        <div class="row mb-4">
+            <!-- Структура доходов -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Структура доходов</h5>
+                        <div class="chart-container" style="position: relative; height:300px;">
+                            <canvas id="incomeChart"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <ul class="list-group">
+                                {% for cat in income_categories %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ cat.category__name }}
+                                        <span class="badge bg-success rounded-pill">{{ cat.total }} ₽</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Структура расходов -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Структура расходов</h5>
+                        <div class="chart-container" style="position: relative; height:300px;">
+                            <canvas id="expensesChart"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <ul class="list-group">
+                                {% for cat in expense_categories %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ cat.category__name }}
+                                        <span class="badge bg-danger rounded-pill">{{ cat.total }} ₽</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Последние транзакции -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Последние операции</h5>
+                <a href="{% url 'add_transaction' %}" class="btn btn-primary">Добавить операцию</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Категория</th>
+                            <th>Сумма</th>
+                            <th>Описание</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>{{ transaction.date|date:"d.m.Y" }}</td>
+                                <td>{{ transaction.get_transaction_type_display }}</td>
+                                <td>{{ transaction.category.name|default:"-" }}</td>
+                                <td class="{% if transaction.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                    {{ transaction.amount }} ₽
+                                </td>
+                                <td>{{ transaction.description|truncatechars:30|default:"-" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">Нет операций</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'import_transactions' %}" class="btn btn-info">
+                    <i class="bi bi-upload"></i> Импорт
+                </a>
+                <a href="{% url 'export_transactions' %}" class="btn btn-success">
+                    <i class="bi bi-download"></i> Экспорт
+                </a>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Регистрируем плагин для подписей
+    Chart.register(ChartDataLabels);
+
+    // Общие настройки для обеих диаграмм
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+            },
+            datalabels: {
+                formatter: (value, ctx) => {
+                    let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                    let percentage = (value * 100 / sum).toFixed(1) + '%';
+                    return percentage;
+                },
+                color: '#fff',
+                font: {
+                    weight: 'bold',
+                    size: 12
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return `${context.label}: ${context.raw} ₽ (${(context.parsed * 100 / context.dataset.data.reduce((a, b) => a + b, 0)).toFixed(1)}%)`;
+                    }
+                }
+            }
+        },
+        cutout: '60%'
+    };
+
+    // График доходов
+    new Chart(
+        document.getElementById('incomeChart'),
+        {
+            type: 'doughnut',
+            data: {
+                labels: [{% for cat in income_categories %}'{{ cat.category__name }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for cat in income_categories %}{{ cat.total }},{% endfor %}],
+                    backgroundColor: [
+                        '#4BC0C0', '#36A2EB', '#8AC24A', '#9966FF', '#00BCD4',
+                        '#FFCE56', '#607D8B', '#FF9F40', '#E91E63', '#FF6384'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        }
+    );
+
+    // График расходов
+    new Chart(
+        document.getElementById('expensesChart'),
+        {
+            type: 'doughnut',
+            data: {
+                labels: [{% for cat in expense_categories %}'{{ cat.category__name }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for cat in expense_categories %}{{ cat.total }},{% endfor %}],
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                        '#FF9F40', '#8AC24A', '#607D8B', '#E91E63', '#00BCD4'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        }
+    );
+});
+</script>
+{% endblock %}

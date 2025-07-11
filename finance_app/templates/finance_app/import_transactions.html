@@ -1,0 +1,66 @@
+{% extends 'finance_app/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Импорт транзакций</h2>
+
+    {% if messages %}
+    <div class="alert alert-info">
+        {% for message in messages %}
+            {{ message }}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Формат файла</h5>
+            <p>Загрузите CSV файл в следующем формате:</p>
+
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип</th>
+                            <th>Категория</th>
+                            <th>Сумма</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2023-06-01</td>
+                            <td>Доход</td>
+                            <td>Зарплата</td>
+                            <td>50000</td>
+                            <td>Зарплата за июнь</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="importForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label">Выберите CSV файл</label>
+                    <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span id="submitText">Импортировать</span>
+                    <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('importForm').addEventListener('submit', function() {
+    document.getElementById('submitText').textContent = 'Импорт...';
+    document.getElementById('spinner').classList.remove('d-none');
+    document.getElementById('submitBtn').disabled = true;
+});
+</script>
+{% endblock %}
